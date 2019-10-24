@@ -1,0 +1,35 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: azuredaymodern
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: azuredaymodern
+    spec:
+      containers:
+      - name: azuredaymodern
+        image: azureday.azurecr.io/demo/azuredaymodern:1.0
+        ports:
+        - containerPort: 80
+      imagePullSecrets:
+      - name: acr-auth
+      nodeSelector:
+        kubernetes.io/os: linux
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: azuredaymodern
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: azuredaymodern
+  type: ClusterIP

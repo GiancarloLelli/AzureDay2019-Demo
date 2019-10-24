@@ -1,0 +1,58 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: azuredaylegacy
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: azuredaylegacy
+    spec:
+      containers:
+      - name: azuredaylegacy
+        image: azureday.azurecr.io/demo/azuredaylegacy:1.0
+        ports:
+        - containerPort: 80
+      imagePullSecrets:
+      - name: acr-auth
+      nodeSelector:
+        kubernetes.io/os: windows
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: azuredaylegacy
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: azuredaylegacy
+  type: ClusterIP
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: url-routing-ingress
+  annotations:
+    kubernetes.io/ingress.class: addon-http-application-routing
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: azuredaylegacy.0e03bcbb6c014198bcb0.northeurope.aksapp.io
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: azuredaylegacy
+          servicePort: 80
+      - path: /api/Products
+        backend:
+          serviceName: azuredaymodern
+          servicePort: 80
